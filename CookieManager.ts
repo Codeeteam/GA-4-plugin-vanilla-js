@@ -28,25 +28,21 @@ export default class CookieManager {
     });
     this.popupVisibility = true;
 
-    this.getValuesFormCookies();
+    this.init();
   }
 
-  // Get data from cookies
-  private getValuesFormCookies() {
+  private init() {
     const isAlreadySaved = getCookieValue("cookie_permisson");
 
     if (!!isAlreadySaved) {
       this.popupVisibility = false;
-
-      this.gtagManager.getConsentsFromCookies();
-    }
+      this.gtagManager.init(true);
+    } else this.gtagManager.init();
   }
 
   // Save data to cookies
-  private saveValuesToCookies() {
+  private saveCookies() {
     setCookie("cookie_permisson", "set");
-
-    this.gtagManager.saveConsentToCookies();
   }
 
   // Handle gtag update
@@ -54,13 +50,18 @@ export default class CookieManager {
     this.gtagManager?.updateConsent(parameter, value);
   }
 
+  getGtagConsents() {
+    return this.gtagManager?.consents;
+  }
+
   showData() {
     console.log(this);
-    this.gtagManager.init()
   }
 
   save() {
-    this.saveValuesToCookies();
+    this.saveCookies();
+    this.gtagManager.saveConsents();
+
     this.popupVisibility = false;
   }
 }

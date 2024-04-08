@@ -31,40 +31,39 @@ export default class GtagManager {
     this.consents = cfg.consents;
   }
 
-  init() {
-    console.log(JSON.stringify(this.consents));
+  private attachLinkedScript = () => {
+    var script = document.createElement("script");
+    script.id = "gtag";
+    script.dataset.strategy = "afterInteractive";
+    script.defer = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${this.id}`;
 
-    /*
+    document.body.appendChild(script);
+  };
 
-      Script
-        strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-      />
-      <Script
-        id="google-analytics"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
+  private attachInitScript = () => {
+    var script = document.createElement("script");
+    script.id = "gtag-init";
+    script.dataset.strategy = "afterInteractive";
+    script.defer = true;
 
-                gtag('consent', 'default', {
-                    'analytics_storage': 'denied'
-                });
+    script.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-                gtag('config', '${GA_MEASUREMENT_ID}', {
-                    page_path: window.location.pathname,
-                });
-                `,
-        }}
-      />
+    gtag('consent','default', 
+      ${JSON.stringify(this.consents, null, "\t")} 
+    )
 
-    */
-  }
+    gtag('config', '${this.id}');
+    `;
+
+    document.body.appendChild(script);
+  };
 
   // Get consents from cookies
-  getConsentsFromCookies() {
+  private getConsentsFromCookies() {
     Object.keys(this.consents).forEach((ckey) => {
       this.consents = {
         ...this.consents,
@@ -73,37 +72,31 @@ export default class GtagManager {
     });
   }
 
-  // Save consents to cookies
-  saveConsentToCookies() {
+  private saveConsentsToDataLayer() {
+    (window as any).gtag("consent", "update", this.consents);
+  }
+
+  private saveConsentsToCookies() {
     Object.keys(this.consents).forEach((ckey) => {
       setCookie(ckey, this.consents[ckey as GtagConsentsKeys]);
     });
   }
 
+  init(isAlreadySaved?: boolean) {
+    if (isAlreadySaved) this.getConsentsFromCookies();
+
+    this.attachLinkedScript();
+    this.attachInitScript();
+  }
+
+  // Save consents
+  saveConsents() {
+    this.saveConsentsToDataLayer();
+    this.saveConsentsToCookies();
+  }
+
   // Handle consent update
   updateConsent(parameter: GtagConsentsKeys, value: TGtagConsentValue) {
     this.consents[parameter] = value;
-
-    // numero uno
-    // function gtag() {
-    //   window.dataLayer = window.dataLayer || [];
-    //   window.dataLayer.push(arguments);
-    // }
-
-    // const sendConsent = useCallback((consent) => {
-    //   gtag("consent", "default", consent);
-    // }, []);
-
-
-    // numero dos
-    // useEffect(() => {
-    //   const newValue = cookieConsent ? "granted" : "denied";
-
-    //   window.gtag("consent", "update", {
-    //     analytics_storage: newValue,
-    //   });
-
-    //   setLocalStorage("cookie_consent", cookieConsent);
-    // }, [cookieConsent]);
   }
 }
