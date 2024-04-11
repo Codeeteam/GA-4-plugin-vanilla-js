@@ -1,20 +1,24 @@
 import GtagManager, {
   GtagConsentsKeys,
+  IGtagConsents,
   TGtagConsentValue,
-} from "./GtagManager";
-import { getCookieValue, setCookie } from "./helpers";
+} from "./modules/GtagManager";
+import { getCookieValue, setCookie } from "./modules/helpers";
 
 const GTAGCONSENTSINIT = {
-  ad_personalization_storage: "denied" as TGtagConsentValue,
   ad_storage: "denied" as TGtagConsentValue,
-  ad_user_data_storage: "denied" as TGtagConsentValue,
+  ad_user_data: "denied" as TGtagConsentValue,
+  ad_personalization: "denied" as TGtagConsentValue,
   analytics_storage: "denied" as TGtagConsentValue,
-  deva_accepted: "denied" as TGtagConsentValue,
+  // deva_accepted: "denied" as TGtagConsentValue,
 };
 
 interface ICookieManagerConfig {
   gtagId: string;
 }
+
+export type CookieGtagConsentsKeys = GtagConsentsKeys;
+export type ICookieIGtagConsents = IGtagConsents;
 
 export default class CookieManager {
   private gtagManager: GtagManager;
@@ -40,22 +44,20 @@ export default class CookieManager {
     } else this.gtagManager.init();
   }
 
-  // Save data to cookies
   private saveCookies() {
     setCookie("cookie_permisson", "set");
   }
 
-  // Handle gtag update
   updateGtagConsent(parameter: GtagConsentsKeys, value: TGtagConsentValue) {
     this.gtagManager?.updateConsent(parameter, value);
   }
 
-  getGtagConsents() {
-    return this.gtagManager?.consents;
+  updateGtagConsentAll(value: TGtagConsentValue) {
+    this.gtagManager?.updateConsentAll(value);
   }
 
-  showData() {
-    console.log(this);
+  getGtagConsents() {
+    return this.gtagManager?.consents;
   }
 
   save() {

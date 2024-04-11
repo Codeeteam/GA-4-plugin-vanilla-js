@@ -3,18 +3,18 @@ import { getCookieValue, setCookie } from "./helpers";
 export type TGtagConsentValue = "denied" | "granted";
 
 export type GtagConsentsKeys =
-  | "ad_personalization_storage"
+  | "ad_personalization"
   | "ad_storage"
-  | "ad_user_data_storage"
-  | "analytics_storage"
-  | "deva_accepted";
+  | "ad_user_data"
+  | "analytics_storage";
+// | "deva_accepted";
 
 export interface IGtagConsents {
-  ad_personalization_storage: TGtagConsentValue;
+  ad_personalization: TGtagConsentValue;
   ad_storage: TGtagConsentValue;
-  ad_user_data_storage: TGtagConsentValue;
+  ad_user_data: TGtagConsentValue;
   analytics_storage: TGtagConsentValue;
-  deva_accepted: TGtagConsentValue;
+  // deva_accepted: TGtagConsentValue;
 }
 
 interface IGtagManagerConfig {
@@ -31,7 +31,7 @@ export default class GtagManager {
     this.consents = cfg.consents;
   }
 
-  private attachLinkedScript = () => {
+  private attachLinkedScript() {
     var script = document.createElement("script");
     script.id = "gtag";
     script.dataset.strategy = "afterInteractive";
@@ -39,9 +39,9 @@ export default class GtagManager {
     script.src = `https://www.googletagmanager.com/gtag/js?id=${this.id}`;
 
     document.body.appendChild(script);
-  };
+  }
 
-  private attachInitScript = () => {
+  private attachInitScript() {
     var script = document.createElement("script");
     script.id = "gtag-init";
     script.dataset.strategy = "afterInteractive";
@@ -60,9 +60,8 @@ export default class GtagManager {
     `;
 
     document.body.appendChild(script);
-  };
+  }
 
-  // Get consents from cookies
   private getConsentsFromCookies() {
     Object.keys(this.consents).forEach((ckey) => {
       this.consents = {
@@ -89,14 +88,21 @@ export default class GtagManager {
     this.attachInitScript();
   }
 
-  // Save consents
   saveConsents() {
     this.saveConsentsToDataLayer();
     this.saveConsentsToCookies();
   }
 
-  // Handle consent update
   updateConsent(parameter: GtagConsentsKeys, value: TGtagConsentValue) {
     this.consents[parameter] = value;
+  }
+
+  updateConsentAll(value: TGtagConsentValue) {
+    Object.keys(this.consents).forEach((ckey) => {
+      this.consents = {
+        ...this.consents,
+        [ckey]: value,
+      };
+    });
   }
 }
